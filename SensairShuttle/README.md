@@ -61,6 +61,7 @@ then restart the Arduino IDE.
 | `11_WiFi_Setup` | board + WiFi network | full on-device WiFi onboarding: network scan list, on-screen keyboard (3 pages) for the password, connect, then internet verification via HTTP 204 check with round-trip time |
 | `12_Mic_SoundLevel` | board | sound detection with intensity: live VU meter with peak hold and threshold flag, Serial-Plotter-friendly output |
 | `13_Speaker_Beep` | board + speaker | simple beeping: startup jingle, three tone buttons, volume cycling, BOOT double beep |
+| `14_Rotary_Keyboard` | board | space-saving text entry: up/down arrows rotate a character (hold to auto-repeat, arrows preview neighbors), tap it to append; mode key cycles abc/ABC/123/#?!, plus backspace, cancel and OK |
 
 Minimal sensor sketch:
 

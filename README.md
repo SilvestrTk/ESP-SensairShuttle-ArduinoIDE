@@ -31,7 +31,7 @@ If a sensor isn't detected, run example `08_Sensor_Diagnostic` and check the
 
 ## Status
 
-All 13 examples compile (arduino-esp32 3.3.10); display, touch, BME690,
+All 14 examples compile (arduino-esp32 3.3.10); display, touch, BME690,
 BMI270 and BMM350 (direct + aux access) are verified working on hardware.
 Also covered: WiFi onboarding with on-screen keyboard, microphone level
 meter, and speaker beeps (differential PDM). Not covered yet: BS8112 touch
