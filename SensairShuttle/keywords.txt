@@ -13,6 +13,9 @@ SensairEnvData	KEYWORD1
 SensairMotionData	KEYWORD1
 SensairMagData	KEYWORD1
 SensairTouchPoint	KEYWORD1
+SensairMic	KEYWORD1
+SensairSpeaker	KEYWORD1
+SensairSoundLevel	KEYWORD1
 
 # Methods (KEYWORD2)
 begin	KEYWORD2
@@ -48,6 +51,13 @@ heading	KEYWORD2
 fieldStrength	KEYWORD2
 magneticReset	KEYWORD2
 usingAux	KEYWORD2
+readLevel	KEYWORD2
+soundDetected	KEYWORD2
+playTone	KEYWORD2
+playSamples	KEYWORD2
+beep	KEYWORD2
+setAmp	KEYWORD2
+sampleRate	KEYWORD2
 isReady	KEYWORD2
 accelRangeG	KEYWORD2
 gyroRangeDps	KEYWORD2

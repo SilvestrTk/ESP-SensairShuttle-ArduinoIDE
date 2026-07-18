@@ -11,7 +11,9 @@
  *   SensairBME690   — environmental sensor shuttle board (T/RH/p/gas)
  *   SensairBMI270   — 6-axis IMU on the motion shuttle board
  *   SensairBMM350   — magnetometer on the motion shuttle board
- *                     (behind the BMI270 aux interface)
+ *                     (direct on the bus or behind the BMI270 aux interface)
+ *   SensairMic      — analog microphone level meter (sound detection)
+ *   SensairSpeaker  — PDM speaker output (tones, beeps, raw PCM)
  *
  * Requires: arduino-esp32 core 3.3.0 or newer (ESP32-C5 support),
  *           board "ESP32C5 Dev Module".
@@ -28,5 +30,7 @@
 #include "SensairBME690.h"
 #include "SensairBMI270.h"
 #include "SensairBMM350.h"
+#include "SensairMic.h"
+#include "SensairSpeaker.h"
 
 #endif /* SENSAIR_SHUTTLE_H */

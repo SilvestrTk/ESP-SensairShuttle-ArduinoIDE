@@ -12,6 +12,8 @@ per module**.
 | `SensairBME690`  | `src/SensairBME690.*`  | ShuttleBoard-BME690: temperature, humidity, pressure, gas resistance |
 | `SensairBMI270`  | `src/SensairBMI270.*`  | ShuttleBoard-BMI270&BMM350: 6-axis IMU (accel + gyro) |
 | `SensairBMM350`  | `src/SensairBMM350.*`  | Same shuttle board: 3-axis magnetometer — direct on the bus (0x14) or through the BMI270 aux interface (see note below) |
+| `SensairMic`     | `src/SensairMic.*`     | Analog microphone (op-amp into ADC): sound level meter / sound detection |
+| `SensairSpeaker` | `src/SensairSpeaker.*` | Speaker via differential PDM + NS4150B amp: tones, beeps, raw 16-bit PCM |
 
 The official **Bosch SensorAPI** drivers (BME69x v1.1.0, BMI270 v2.86.1,
 BMM350 v1.10.0, BSD-3-Clause) are bundled unmodified in `src/vendor/` —
@@ -57,6 +59,8 @@ then restart the Arduino IDE.
 | `09_Touch_Buttons` | board | four on-screen buttons with press/release/cancel handling and per-button counters |
 | `10_Touch_Swipe` | board | swipe detection in all four directions — software detector (reliable) side by side with the chip's gesture reports |
 | `11_WiFi_Setup` | board + WiFi network | full on-device WiFi onboarding: network scan list, on-screen keyboard (3 pages) for the password, connect, then internet verification via HTTP 204 check with round-trip time |
+| `12_Mic_SoundLevel` | board | sound detection with intensity: live VU meter with peak hold and threshold flag, Serial-Plotter-friendly output |
+| `13_Speaker_Beep` | board + speaker | simple beeping: startup jingle, three tone buttons, volume cycling, BOOT double beep |
 
 Minimal sensor sketch:
 
@@ -104,9 +108,9 @@ Pin map extracted from the official Espressif schematic
 | Shuttle BM_G1 (INT) | 28 | **shared with the BOOT button** |
 | Shuttle BM_G2 (INT2) | 0 | |
 | BOOT button | 28 | LOW when pressed |
-| Speaker amp enable (NS4150B) | 1 | HIGH = amp on |
-| Speaker PDM +/− | 7 / 8 | differential PDM (not covered by this library) |
-| Microphone (analog, via op-amp) | 6 | ADC input (not covered by this library) |
+| Speaker amp enable (NS4150B) | 1 | HIGH = amp on (`SensairSpeaker`) |
+| Speaker PDM +/− | 7 / 8 | differential PDM (`SensairSpeaker`) |
+| Microphone (analog, via op-amp) | 6 | ADC input (`SensairMic`) |
 | WS2812 connector | 27 | external RGB strip |
 | External header IO | 4 (+5 via unpopulated R14) | |
 
@@ -253,6 +257,34 @@ codes: `0` OK, `-3` device not found (shuttle board absent — `begin()`
 probes the address first and fails fast), `-2` communication failed,
 `-9` (BMI270) config load failed.
 
+### SensairMic
+
+```cpp
+mic.begin();                          // powers the audio rail, sets up the ADC
+SensairSoundLevel lv = mic.readLevel(30);   // blocking 30 ms window
+// lv.rmsMv (loudness), lv.peakMv, lv.dcMv (bias), lv.samples
+mic.soundDetected(40.0f);             // true when RMS >= 40 mV
+```
+
+This is a level meter (several kHz effective sampling), ideal for sound
+detection, clap triggers and VU meters — not an audio recorder. The mic
+bias settles for ~300 ms after power-up; ignore the first readings.
+
+### SensairSpeaker
+
+```cpp
+speaker.begin(16000);                 // PDM output at 16 kHz sample rate
+speaker.beep();                       // short 1.5 kHz beep
+speaker.playTone(440, 200, 80);       // freq [Hz], duration [ms], volume 0..100
+speaker.playSamples(pcm, count);      // raw mono 16-bit PCM at the begin() rate
+speaker.setAmp(false);                // force the amplifier off (no idle hiss)
+```
+
+Playback is blocking. The NS4150B amplifier is enabled automatically on
+first playback; tones get a 5 ms fade-in/out against clicks. The setup
+(differential PDM with the inverted signal on the N pin) mirrors the
+factory firmware.
+
 ---
 
 ## Troubleshooting
@@ -293,10 +325,10 @@ hold BOOT while pressing reset to force download mode.
 
 ## Notes & limitations
 
-- **Audio (speaker/microphone) is not covered yet.** The speaker is driven
-  as differential PDM (GPIO7/8) into an NS4150B amp (enable = GPIO1), the
-  microphone is analog into GPIO6/ADC — pins are defined in
-  `SensairPins.h` if you want to experiment.
+- Audio: `SensairSpeaker` covers tones and raw PCM playback; `SensairMic`
+  is a level meter. Full-bandwidth audio *recording* (continuous ADC
+  sampling) and audio file playback are not implemented — the plumbing in
+  both modules is a solid starting point if you need them.
 - The BS8112 touch-button controller (address 0x50) is not wrapped yet.
 - Gas resistance is raw (see the SensairBME690 API section for what it
   means). Bosch's IAQ index requires the proprietary BSEC2 library
