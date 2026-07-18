@@ -56,6 +56,7 @@ then restart the Arduino IDE.
 | `08_Sensor_Diagnostic` | board (+ shuttle board) | low-level I2C bus scans, chip-ID reads and full driver init with Bosch result codes — run this first when a sensor is not detected |
 | `09_Touch_Buttons` | board | four on-screen buttons with press/release/cancel handling and per-button counters |
 | `10_Touch_Swipe` | board | swipe detection in all four directions — software detector (reliable) side by side with the chip's gesture reports |
+| `11_WiFi_Setup` | board + WiFi network | full on-device WiFi onboarding: network scan list, on-screen keyboard (3 pages) for the password, connect, then internet verification via HTTP 204 check with round-trip time |
 
 Minimal sensor sketch:
 
