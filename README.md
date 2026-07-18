@@ -9,6 +9,7 @@ display and swappable Bosch sensor daughterboards.
 | Folder | Contents |
 |---|---|
 | [`SensairShuttle/`](SensairShuttle/) | Arduino library: one driver module per file, one example per module, official Bosch SensorAPI drivers bundled. See its [README](SensairShuttle/README.md) for full setup, pinout, API reference and troubleshooting. |
+| [`AlarmDevice/`](AlarmDevice/) | Application: multi-sensor alarm device — configurable thresholds (temperature, humidity, air quality, vibration, sound), local siren + IFTTT webhook alarms with an NVM retry queue, touch UI with rotary-keyboard text entry, self-test suite. See its [README](AlarmDevice/README.md). |
 
 ## Hardware
 
