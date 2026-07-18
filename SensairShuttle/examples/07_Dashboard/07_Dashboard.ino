@@ -26,7 +26,8 @@ uint8_t page = 0;   /* motion board: 0 = IMU, 1 = compass */
 void header(const char *title) {
   display.fillScreen(SENSAIR_BLACK);
   display.fillRect(0, 0, display.width(), 26, SENSAIR_NAVY);
-  display.setCursor(8, 6);
+  /* extra inset: the title line sits at the height of the corner rounding */
+  display.setCursor(SENSAIR_LCD_MARGIN + 8, 6);
   display.setTextSize(2);
   display.setTextColor(SENSAIR_WHITE, SENSAIR_NAVY);
   display.print(title);
@@ -43,7 +44,7 @@ void setup() {
   touch.setRotation(display.rotation());
 
   header("SensairShuttle");
-  display.setCursor(8, 40);
+  display.setCursor(SENSAIR_LCD_MARGIN,40);
   display.setTextSize(1);
   display.setTextColor(SENSAIR_GREY, SENSAIR_BLACK);
   display.println("probing shuttle board...");
@@ -66,7 +67,7 @@ void setup() {
   else if (hasImu) header("Motion");
   else {
     header("No sensor");
-    display.setCursor(8, 40);
+    display.setCursor(SENSAIR_LCD_MARGIN,40);
     display.setTextSize(2);
     display.setTextColor(SENSAIR_ORANGE, SENSAIR_BLACK);
     display.println("Insert a shuttle\nboard + reset");
@@ -74,10 +75,10 @@ void setup() {
     /* On-screen I2C diagnostics, in case Serial is not visible:
      * expected 0x15 touch, 0x50 buttons, 0x76 BME690 or 0x68 BMI270. */
     display.setTextSize(1);
-    display.setCursor(8, 95);
+    display.setCursor(SENSAIR_LCD_MARGIN,95);
     display.setTextColor(SENSAIR_GREY, SENSAIR_BLACK);
     display.println("I2C devices found:");
-    display.setCursor(8, 105);
+    display.setCursor(SENSAIR_LCD_MARGIN,105);
     display.setTextColor(SENSAIR_WHITE, SENSAIR_BLACK);
     uint8_t found = 0;
     for (uint8_t addr = 0x08; addr <= 0x77; addr++) {
@@ -100,16 +101,16 @@ void showEnvironment() {
   if (!bme.read(env)) return;
 
   display.setTextSize(2);
-  display.setCursor(8, 40);
+  display.setCursor(SENSAIR_LCD_MARGIN,40);
   display.setTextColor(SENSAIR_WHITE, SENSAIR_BLACK);
   display.printf("T: %6.1f C   \n", env.temperature);
-  display.setCursor(8, 65);
+  display.setCursor(SENSAIR_LCD_MARGIN,65);
   display.setTextColor(SENSAIR_CYAN, SENSAIR_BLACK);
   display.printf("RH: %5.1f %%   \n", env.humidity);
-  display.setCursor(8, 90);
+  display.setCursor(SENSAIR_LCD_MARGIN,90);
   display.setTextColor(SENSAIR_GREEN, SENSAIR_BLACK);
   display.printf("p: %7.1f hPa   \n", env.pressure);
-  display.setCursor(8, 115);
+  display.setCursor(SENSAIR_LCD_MARGIN,115);
   display.setTextColor(SENSAIR_YELLOW, SENSAIR_BLACK);
   if (env.gasValid && env.heaterStable) {
     display.printf("gas: %6.0f kOhm  \n", env.gasResistance / 1000.0f);
@@ -127,11 +128,11 @@ void showImu() {
 
   display.setTextSize(2);
   display.setTextColor(SENSAIR_WHITE, SENSAIR_BLACK);
-  display.setCursor(8, 40);
+  display.setCursor(SENSAIR_LCD_MARGIN,40);
   display.printf("ax %+5.2f g   \n", m.ax);
-  display.setCursor(8, 62);
+  display.setCursor(SENSAIR_LCD_MARGIN,62);
   display.printf("ay %+5.2f g   \n", m.ay);
-  display.setCursor(8, 84);
+  display.setCursor(SENSAIR_LCD_MARGIN,84);
   display.printf("az %+5.2f g   \n", m.az);
   display.setTextColor(SENSAIR_CYAN, SENSAIR_BLACK);
   display.setCursor(150, 40);
@@ -159,11 +160,11 @@ void showCompass() {
   float hdg = SensairBMM350::heading(m);
   display.setTextSize(3);
   display.setTextColor(SENSAIR_WHITE, SENSAIR_BLACK);
-  display.setCursor(8, 45);
+  display.setCursor(SENSAIR_LCD_MARGIN,45);
   display.printf("%5.1f deg  ", hdg);
   display.setTextSize(1);
   display.setTextColor(SENSAIR_GREY, SENSAIR_BLACK);
-  display.setCursor(8, 80);
+  display.setCursor(SENSAIR_LCD_MARGIN,80);
   display.printf("x %+7.1f  y %+7.1f  z %+7.1f uT   ", m.x, m.y, m.z);
 
   /* needle */
@@ -180,10 +181,23 @@ void showCompass() {
 }
 
 void loop() {
-  /* page switching: tap or BOOT button (motion board only) */
+  /* page switching: tap or BOOT button (motion board only).
+   * Taps are detected in software (touch-down -> quick release) — the
+   * chip's gesture reports are best-effort without an interrupt line. */
   bool toggle = false;
-  SensairTouchPoint p;
-  if (hasTouch && touch.read(p) && p.gesture == SENSAIR_GESTURE_SINGLE_TAP) toggle = true;
+  static bool touching = false;
+  static uint32_t touchStart = 0;
+  if (hasTouch) {
+    SensairTouchPoint p;
+    bool down = touch.read(p) && p.touched;
+    if (down && !touching) {
+      touching = true;
+      touchStart = millis();
+    } else if (!down && touching) {
+      touching = false;
+      if (millis() - touchStart < 350) toggle = true;
+    }
+  }
   static bool wasPressed = false;
   bool pressed = board.buttonPressed();
   if (pressed && !wasPressed) toggle = true;

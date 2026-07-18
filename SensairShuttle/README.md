@@ -54,6 +54,8 @@ then restart the Arduino IDE.
 | `06_BMM350_Compass` | BMI270&BMM350 shuttle board | magnetic field + compass heading on serial |
 | `07_Dashboard` | any shuttle board | auto-detects the inserted board, live values on the LCD, touch/BOOT to switch pages |
 | `08_Sensor_Diagnostic` | board (+ shuttle board) | low-level I2C bus scans, chip-ID reads and full driver init with Bosch result codes — run this first when a sensor is not detected |
+| `09_Touch_Buttons` | board | four on-screen buttons with press/release/cancel handling and per-button counters |
+| `10_Touch_Swipe` | board | swipe detection in all four directions — software detector (reliable) side by side with the chip's gesture reports |
 
 Minimal sensor sketch:
 
@@ -173,6 +175,11 @@ Rotation 1 matches the factory firmware's landscape orientation. If the
 image ever appears shifted by a few pixels in a flipped rotation, trim with
 `display.setPanelOffset(col, row)`.
 
+**Rounded corners:** the display glass covers the outermost pixels with a
+corner radius, so anything drawn hard into a corner is unreadable. Keep
+text and interactive elements at least `SENSAIR_LCD_MARGIN` (12 px) away
+from every edge — all examples follow this.
+
 ### SensairTouch
 
 ```cpp
@@ -186,6 +193,12 @@ if (touch.read(p)) {
 
 Gestures: `SENSAIR_GESTURE_SWIPE_UP/DOWN/LEFT/RIGHT`, `SINGLE_TAP`,
 `DOUBLE_TAP`, `LONG_PRESS` (`SensairTouch::gestureName()` for printing).
+Gesture delivery is **best-effort**: the touch interrupt line is not wired
+on this board, so the panel is polled and a gesture report can be missed.
+For anything important, detect taps in software from `p.touched`
+transitions (see `07_Dashboard`). Raw coordinates (`p.rawX`/`p.rawY`) are
+in the controller's portrait frame, 0..239 × 0..283; the rotation mapping
+in the driver was calibrated on hardware (four-quadrant button test).
 
 ### SensairBME690
 

@@ -21,17 +21,17 @@ void setup() {
   display.fillScreen(SENSAIR_BLACK);
 
   /* --- text ----------------------------------------------------------- */
-  display.setCursor(10, 10);
+  display.setCursor(SENSAIR_LCD_MARGIN,10);
   display.setTextColor(SENSAIR_WHITE, SENSAIR_BLACK);
   display.setTextSize(3);
   display.println("Hello World!");
 
-  display.setCursor(10, 45);
+  display.setCursor(SENSAIR_LCD_MARGIN,45);
   display.setTextSize(2);
   display.setTextColor(SENSAIR_CYAN, SENSAIR_BLACK);
   display.println("ESP-SensairShuttle");
 
-  display.setCursor(10, 70);
+  display.setCursor(SENSAIR_LCD_MARGIN,70);
   display.setTextSize(1);
   display.setTextColor(SENSAIR_GREY, SENSAIR_BLACK);
   display.printf("%d x %d px, rotation %d\n", display.width(), display.height(),
@@ -56,7 +56,7 @@ void setup() {
 void loop() {
   /* Small live element: a counter in the bottom-left corner. */
   static uint32_t seconds = 0;
-  display.setCursor(10, display.height() - 25);
+  display.setCursor(SENSAIR_LCD_MARGIN,display.height() - 25);
   display.setTextSize(2);
   display.setTextColor(SENSAIR_ORANGE, SENSAIR_BLACK);
   display.printf("up %lus  ", (unsigned long)seconds++);

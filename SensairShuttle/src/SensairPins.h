@@ -32,6 +32,11 @@
 #define SENSAIR_LCD_HEIGHT         284
 #define SENSAIR_LCD_SPI_FREQ       20000000UL  /* factory firmware: 20 MHz */
 
+/* The display glass has rounded corners that cover the outermost pixels.
+ * Keep text and important content at least this far from every edge —
+ * content drawn hard into a corner is not readable. */
+#define SENSAIR_LCD_MARGIN         12
+
 /* ---------------------------------------------------------------------------
  * Power control: gates LCD_3V3 and AUDIO_3V3 through a P-MOSFET.
  * LOW  = peripherals powered (default at boot: 10 MOhm pull-down)

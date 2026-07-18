@@ -9,6 +9,7 @@
 #define REG_FINGER_NUM   0x02
 #define REG_X_H          0x03  /* bits 3:0 = X[11:8] */
 #define REG_CHIP_ID      0xA7
+#define REG_MOTION_MASK  0xEC  /* bit0 = enable double-click detection */
 #define REG_DIS_AUTOSLEEP 0xFE /* write non-zero to keep the chip awake */
 
 bool SensairTouch::begin(TwoWire &wire, uint32_t i2cFreq) {
@@ -35,6 +36,9 @@ bool SensairTouch::begin(TwoWire &wire, uint32_t i2cFreq) {
     /* Keep the controller awake — with no interrupt line wired we must be
      * able to poll it at any time. Best effort; ignore failure. */
     writeReg(REG_DIS_AUTOSLEEP, 0x01);
+
+    /* Enable double-click detection in the gesture engine (off by default). */
+    writeReg(REG_MOTION_MASK, 0x01);
     return true;
 }
 
@@ -50,28 +54,34 @@ bool SensairTouch::read(SensairTouchPoint &point) {
 
     int16_t rx = ((d[2] & 0x0F) << 8) | d[3];
     int16_t ry = ((d[4] & 0x0F) << 8) | d[5];
-    if (rx >= SENSAIR_LCD_WIDTH)  rx = SENSAIR_LCD_WIDTH - 1;
-    if (ry >= SENSAIR_LCD_HEIGHT) ry = SENSAIR_LCD_HEIGHT - 1;
+
+    /* The CST816 on this panel reports touches in a PORTRAIT frame:
+     * rawX 0..239 across the short edge, rawY 0..283 along the long edge,
+     * with the long axis inverted relative to the display's portrait
+     * orientation. Mapping below calibrated on hardware with a four-
+     * quadrant button test. */
+    if (rx >= SENSAIR_LCD_WIDTH)  rx = SENSAIR_LCD_WIDTH - 1;   /* 240 axis */
+    if (ry >= SENSAIR_LCD_HEIGHT) ry = SENSAIR_LCD_HEIGHT - 1;  /* 284 axis */
     point.rawX = rx;
     point.rawY = ry;
 
-    /* Map panel-native portrait coords into display space (see
-     * SensairDisplay::setRotation for the matching MADCTL settings). */
+    /* Map raw coords into display space (see SensairDisplay::setRotation
+     * for the matching MADCTL settings). */
     switch (_rot) {
-        case 0:
+        case 0: /* portrait */
             point.x = rx;
-            point.y = ry;
-            break;
-        case 1: /* landscape, factory orientation */
-            point.x = ry;
-            point.y = (SENSAIR_LCD_WIDTH - 1) - rx;
-            break;
-        case 2:
-            point.x = (SENSAIR_LCD_WIDTH - 1) - rx;
             point.y = (SENSAIR_LCD_HEIGHT - 1) - ry;
             break;
-        case 3:
+        case 1: /* landscape, factory orientation — hardware-verified */
             point.x = (SENSAIR_LCD_HEIGHT - 1) - ry;
+            point.y = (SENSAIR_LCD_WIDTH - 1) - rx;
+            break;
+        case 2: /* portrait flipped */
+            point.x = (SENSAIR_LCD_WIDTH - 1) - rx;
+            point.y = ry;
+            break;
+        case 3: /* landscape flipped */
+            point.x = ry;
             point.y = rx;
             break;
     }

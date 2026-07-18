@@ -6,9 +6,18 @@
  * LCD rail (PWR_CTRL, GPIO5). Neither its interrupt nor its reset line is
  * wired to the ESP32-C5, so the panel is polled.
  *
- * Raw coordinates are in panel-native portrait orientation, x 0..239,
- * y 0..283. Call setRotation() with the same value you passed to
- * SensairDisplay::setRotation() to get display-space coordinates.
+ * Raw coordinates come out of the controller in a portrait frame:
+ * rawX 0..239 across the short edge, rawY 0..283 along the long edge
+ * (long axis inverted vs. the display's portrait orientation; the
+ * rotation mapping was calibrated on hardware). Call setRotation() with
+ * the same value you passed to SensairDisplay::setRotation() to get
+ * display-space coordinates.
+ *
+ * Gesture notes: without the interrupt line, gestures are read by polling
+ * and are best-effort — taps and swipes usually arrive, but don't build
+ * critical UI on them alone. For reliable taps, track touch-down/release
+ * yourself (see the 07_Dashboard example); double-click detection is
+ * enabled in the controller at begin().
  *
  * Part of the SensairShuttle Arduino library.
  */
